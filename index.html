@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Swiss • Growth Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        body { font-family: 'Poppins', system_ui, sans-serif; }
+        .header-dark {
+            background: #0F2D52;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-zinc-50 text-zinc-800">
+    <!-- HEADER -->
+    <header class="header-dark border-b border-white/10">
+        <div class="max-w-screen-2xl mx-auto px-6 md:px-8 py-5 flex items-center justify-between">
+            <div class="flex items-center gap-x-4">
+                <img src="https://standardswiss.com/wp-content/themes/kastbroker/img/logo.png?1" alt="Standard Swiss" class="h-9 brightness-125">
+                <div class="flex items-center gap-x-1.5">
+                    <span class="font-semibold text-2xl tracking-tighter">Standard Swiss</span>
+                </div>
+            </div>
+            <div class="hidden md:block text-emerald-300 text-sm font-medium">HYPOTHETICAL GROWTH PROJECTION</div>
+        </div>
+    </header>
+
+    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 md:px-8 py-8 md:py-12">
+        <!-- Starting Capital -->
+        <div class="mb-8 md:mb-10">
+            <p class="text-center text-zinc-500 text-xs md:text-sm mb-4 tracking-widest">SELECT STARTING ACCOUNT BALANCE</p>
+            <div class="flex justify-center gap-3 sm:gap-6 flex-wrap" id="presets"></div>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-6 md:gap-8">
+            <!-- Controls -->
+            <div class="lg:col-span-5">
+                <div class="bg-white rounded-3xl p-6 md:p-8 shadow border">
+                    <div class="mb-8">
+                        <label class="block text-sm font-semibold mb-3 text-zinc-700">GROWTH MODE</label>
+                        <div class="flex bg-zinc-100 rounded-3xl p-1">
+                            <button onclick="setMode(false)" id="btn-linear"
+                                class="flex-1 py-4 rounded-3xl text-sm font-medium">No Reinvestment</button>
+                            <button onclick="setMode(true)" id="btn-compound"
+                                class="flex-1 py-4 rounded-3xl text-sm font-medium">Compound Reinvestment</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-8">
+                        <div>
+                            <div class="flex justify-between mb-3 text-sm">
+                                <span class="font-medium">Trades per Day</span>
+                                <span id="trades-val" class="font-bold text-xl">2</span>
+                            </div>
+                            <input type="range" id="trades" min="1" max="5" value="2" class="w-full accent-emerald-600">
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-3 text-sm">
+                                <span class="font-medium">Profit per Trade</span>
+                                <span id="profit-val" class="font-bold text-xl text-emerald-600">1.5%</span>
+                            </div>
+                            <input type="range" id="profit" min="1" max="2.5" step="0.1" value="1.5" class="w-full accent-emerald-600">
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-3 text-sm">
+                                <span class="font-medium">Allocation %</span>
+                                <span id="alloc-val" class="font-bold text-xl">20%</span>
+                            </div>
+                            <input type="range" id="alloc" min="10" max="20" value="20" class="w-full accent-emerald-600">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="lg:col-span-7 space-y-6">
+                <!-- Main Result -->
+                <div class="bg-white rounded-3xl p-6 md:p-8 shadow">
+                    <div class="flex flex-col md:flex-row justify-between md:items-end gap-6">
+                        <div>
+                            <div class="text-zinc-500 text-sm">One Year Balance</div>
+                            <div id="final-balance" class="text-5xl md:text-6xl font-semibold tabular-nums text-navy">€12,920</div>
+                            <div id="daily-profit" class="text-emerald-600 text-base md:text-lg mt-2">Avg Daily Profit: €30</div>
+                        </div>
+                        <div class="text-right md:text-right">
+                            <div id="growth-pct" class="text-4xl md:text-5xl font-semibold text-emerald-600">+158.4%</div>
+                            <div id="mode-name" class="text-xs uppercase tracking-widest mt-1">Compound Reinvestment</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Period Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="period-cards"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-amber-50 border-t border-amber-200 py-10 text-center text-xs md:text-sm max-w-2xl mx-auto px-6">
+        <strong>Hypothetical Illustration Only</strong><br>
+        Linear vs Compound scenarios shown for educational purposes only.<br>
+        Not financial advice. Actual results may vary.
+    </div>
+
+    <script>
+        let balance = 5000;
+        let tradesPerDay = 2;
+        let profitPct = 1.5;
+        let allocPct = 20;
+        let isCompound = true;
+
+        const presets = [
+            {val: 5000, trades: 2},
+            {val: 10000, trades: 3},
+            {val: 20000, trades: 4}
+        ];
+
+        function formatEUR(val) {
+            return '€' + Math.round(val).toLocaleString('de-DE');
+        }
+
+        function calculateForDays(days) {
+            let current = balance;
+            const totalTrades = tradesPerDay * days;
+            
+            if (isCompound) {
+                const multiplier = 1 + (allocPct/100) * (profitPct/100);
+                current = balance * Math.pow(multiplier, totalTrades);
+            } else {
+                const posSize = balance * (allocPct / 100);
+                const profitPerTrade = posSize * (profitPct / 100);
+                current = balance + (profitPerTrade * totalTrades);
+            }
+            
+            const profit = current - balance;
+            return {
+                balance: current,
+                profit: profit,
+                pct: (profit / balance) * 100
+            };
+        }
+
+        function updateAll() {
+            document.getElementById('trades-val').textContent = tradesPerDay;
+            document.getElementById('profit-val').textContent = profitPct.toFixed(1) + '%';
+            document.getElementById('alloc-val').textContent = allocPct + '%';
+
+            const yearRes = calculateForDays(264);
+            document.getElementById('final-balance').textContent = formatEUR(yearRes.balance);
+            document.getElementById('growth-pct').textContent = '+' + yearRes.pct.toFixed(1) + '%';
+            
+            const avgDaily = yearRes.profit / 264;
+            document.getElementById('daily-profit').textContent = `Avg Daily Profit: ${formatEUR(avgDaily)}`;
+
+            document.getElementById('mode-name').textContent = isCompound ? 'COMPOUND REINVESTMENT' : 'NO REINVESTMENT (LINEAR)';
+
+            updatePeriodCards();
+        }
+
+        function updatePeriodCards() {
+            const container = document.getElementById('period-cards');
+            container.innerHTML = '';
+            
+            const periods = [
+                {label: '1 Day', days: 1},
+                {label: '1 Month', days: 22},
+                {label: '3 Months', days: 66},
+                {label: '1 Year', days: 264}
+            ];
+            
+            periods.forEach(p => {
+                const res = calculateForDays(p.days);
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-3xl p-5 md:p-6 text-center border border-transparent hover:border-emerald-200 transition-all";
+                card.innerHTML = `
+                    <div class="text-xs text-zinc-500">${p.label}</div>
+                    <div class="text-2xl font-semibold mt-3">${formatEUR(res.balance)}</div>
+                    <div class="text-emerald-600 text-sm mt-1">+${res.pct.toFixed(1)}%</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function createPresetButtons() {
+            const container = document.getElementById('presets');
+            container.innerHTML = '';
+            
+            presets.forEach(p => {
+                const btn = document.createElement('button');
+                const isActive = balance === p.val;
+                btn.className = `px-7 md:px-10 py-4 md:py-5 text-xl md:text-2xl font-semibold rounded-3xl transition-all border-2 ${isActive ? 
+                    'border-emerald-600 bg-emerald-50 shadow-md' : 
+                    'border-zinc-200 hover:border-zinc-300'}`;
+                btn.textContent = formatEUR(p.val);
+                btn.onclick = () => {
+                    balance = p.val;
+                    tradesPerDay = p.trades;
+                    document.getElementById('trades').value = p.trades;
+                    createPresetButtons();
+                    updateAll();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function setMode(compound) {
+            isCompound = compound;
+            const linearBtn = document.getElementById('btn-linear');
+            const compoundBtn = document.getElementById('btn-compound');
+            
+            if (compound) {
+                compoundBtn.classList.add('bg-emerald-600', 'text-white');
+                linearBtn.classList.remove('bg-emerald-600', 'text-white');
+            } else {
+                linearBtn.classList.add('bg-emerald-600', 'text-white');
+                compoundBtn.classList.remove('bg-emerald-600', 'text-white');
+            }
+            updateAll();
+        }
+
+        function initListeners() {
+            document.getElementById('trades').addEventListener('input', e => {
+                tradesPerDay = parseInt(e.target.value);
+                updateAll();
+            });
+            
+            document.getElementById('profit').addEventListener('input', e => {
+                profitPct = parseFloat(e.target.value);
+                updateAll();
+            });
+            
+            document.getElementById('alloc').addEventListener('input', e => {
+                allocPct = parseInt(e.target.value);
+                updateAll();
+            });
+        }
+
+        window.onload = () => {
+            createPresetButtons();
+            initListeners();
+            setMode(true);
+        };
+    </script>
+</body>
+</html>
