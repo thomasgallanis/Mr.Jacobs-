@@ -1,249 +1,380 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standard Swiss • Growth Engine</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-        body { font-family: 'Poppins', system_ui, sans-serif; }
-        .header-dark {
-            background: #0F2D52;
-            color: white;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Cees A. Jacobs · rest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#08090d;
+    --bg-1:#0c0f16;
+    --brass:#b6935f;
+    --brass-dim:#7a6647;
+    --steel:#5f6b85;
+    --ink-0:#eef1f7;
+    --ink-1:#9aa2b5;
+    --ink-2:#525a6c;
+    --hair:rgba(182,147,95,0.22);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html,body{
+    width:100vw; height:100vh;
+    overflow:hidden;
+    background:var(--bg-0);
+    font-family:'JetBrains Mono', monospace;
+  }
+
+  .screen{
+    position:relative;
+    width:100%; height:100%;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 42%, #10141d 0%, transparent 65%),
+      radial-gradient(ellipse 90% 70% at 50% 100%, #0b0d13 0%, transparent 60%),
+      var(--bg-0);
+    overflow:hidden;
+  }
+
+  /* fine directional grain */
+  .screen::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.012) 0px, transparent 1px, transparent 3px);
+    mix-blend-mode:overlay;
+    pointer-events:none;
+    z-index:2;
+  }
+
+  .vignette{
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(3,4,7,0.78) 100%);
+    z-index:3;
+    pointer-events:none;
+  }
+
+  /* ---- fixed chrome ---- */
+  .chrome{
+    position:absolute; inset:0;
+    z-index:15;
+    pointer-events:none;
+  }
+
+  .corner{
+    position:absolute;
+    font-size:0.62rem;
+    letter-spacing:0.28em;
+    color:var(--ink-2);
+    text-transform:uppercase;
+    font-weight:300;
+  }
+  .corner.tl{ top:34px; left:38px; display:flex; align-items:center; gap:10px; }
+  .corner.tl .rule{ width:22px; height:1px; background:var(--hair); }
+  .corner.tr{ top:34px; right:38px; text-align:right; color:var(--ink-1); }
+  .corner.tr .date-day{ color:var(--ink-0); font-weight:400; letter-spacing:0.14em; }
+  .corner.tr .date-sub{ margin-top:4px; font-size:0.6rem; letter-spacing:0.24em; }
+
+  .status-pill{
+    position:absolute; bottom:32px; right:38px;
+    display:flex; align-items:center; gap:10px;
+    padding:8px 20px;
+    border-radius:2px;
+    border:1px solid rgba(255,255,255,0.05);
+    background:rgba(255,255,255,0.015);
+    font-size:0.64rem;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    color:var(--ink-1);
+  }
+  .status-dot{
+    width:5px; height:5px; border-radius:50%;
+    background:var(--brass);
+    box-shadow:0 0 10px rgba(182,147,95,0.7);
+    animation: breathe 3.6s ease-in-out infinite;
+  }
+  @keyframes breathe{
+    0%,100%{ opacity:0.35; transform:scale(0.85); }
+    50%{ opacity:1; transform:scale(1.15); }
+  }
+
+  .counter{
+    position:absolute; bottom:32px; left:38px;
+    font-size:0.62rem;
+    letter-spacing:0.26em;
+    color:var(--ink-2);
+    text-transform:uppercase;
+  }
+  .counter span{ color:var(--ink-1); }
+
+  /* ---- floating composition (drifts to avoid burn-in) ---- */
+  .floating-name{
+    position:absolute;
+    will-change:transform;
+    z-index:10;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    user-select:none;
+    filter: drop-shadow(0 0 40px rgba(182,147,95,0.05));
+  }
+
+  .seal{
+    position:relative;
+    width:132px; height:132px;
+    margin-bottom:34px;
+  }
+  .seal svg{ width:100%; height:100%; display:block; }
+  .seal .ring-outer{
+    fill:none;
+    stroke:var(--hair);
+    stroke-width:0.6;
+  }
+  .seal .ring-inner{
+    fill:none;
+    stroke:rgba(182,147,95,0.5);
+    stroke-width:0.75;
+  }
+  .seal .ring-tick{
+    stroke:rgba(182,147,95,0.35);
+    stroke-width:0.6;
+  }
+  .seal .orbit-dot{
+    fill:var(--brass);
+    filter: drop-shadow(0 0 4px rgba(182,147,95,0.9));
+  }
+  .seal .monogram{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:400;
+    font-size:37px;
+    fill:var(--ink-0);
+    letter-spacing:2px;
+  }
+  .seal-spin{
+    position:absolute; inset:0;
+    animation: spin 220s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .name-block{
+    text-align:center;
+  }
+  .name-serif{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:300;
+    font-style:italic;
+    font-size:clamp(2.6rem, 6.4vw, 4.4rem);
+    color:var(--ink-0);
+    letter-spacing:0.01em;
+    line-height:1;
+    opacity:0.94;
+  }
+  .name-rule{
+    width:64px; height:1px;
+    margin:22px auto;
+    background:linear-gradient(90deg, transparent, var(--brass-dim), transparent);
+  }
+  .name-caps{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:300;
+    font-size:0.68rem;
+    letter-spacing:0.42em;
+    color:var(--ink-1);
+    text-transform:uppercase;
+  }
+
+  @media (max-width: 640px){
+    .corner.tl, .corner.tr{ font-size:0.55rem; }
+    .status-pill{ font-size:0.56rem; padding:7px 14px; }
+    .seal{ width:104px; height:104px; margin-bottom:24px; }
+    .seal .monogram{ font-size:29px; }
+  }
+</style>
 </head>
-<body class="bg-zinc-50 text-zinc-800">
-    <!-- HEADER -->
-    <header class="header-dark border-b border-white/10">
-        <div class="max-w-screen-2xl mx-auto px-6 md:px-8 py-5 flex items-center justify-between">
-            <div class="flex items-center gap-x-4">
-                <img src="https://standardswiss.com/wp-content/themes/kastbroker/img/logo.png?1" alt="Standard Swiss" class="h-9 brightness-125">
-                <div class="flex items-center gap-x-1.5">
-                    <span class="font-semibold text-2xl tracking-tighter">Standard Swiss</span>
-                </div>
-            </div>
-            <div class="hidden md:block text-emerald-300 text-sm font-medium">GROWTH PROJECTION FOR MR C.A. JACOBS</div>
-        </div>
-    </header>
+<body>
+<div class="screen">
+  <div class="vignette"></div>
 
-    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 md:px-8 py-8 md:py-12">
-        <!-- Starting Capital -->
-        <div class="mb-8 md:mb-10">
-            <p class="text-center text-zinc-500 text-xs md:text-sm mb-4 tracking-widest">SELECT STARTING ACCOUNT BALANCE</p>
-            <div class="flex justify-center gap-3 sm:gap-6 flex-wrap" id="presets"></div>
-        </div>
-
-        <div class="grid lg:grid-cols-12 gap-6 md:gap-8">
-            <!-- Controls -->
-            <div class="lg:col-span-5">
-                <div class="bg-white rounded-3xl p-6 md:p-8 shadow border">
-                    <div class="mb-8">
-                        <label class="block text-sm font-semibold mb-3 text-zinc-700">GROWTH MODE</label>
-                        <div class="flex bg-zinc-100 rounded-3xl p-1">
-                            <button onclick="setMode(false)" id="btn-linear"
-                                class="flex-1 py-4 rounded-3xl text-sm font-medium">No Reinvestment</button>
-                            <button onclick="setMode(true)" id="btn-compound"
-                                class="flex-1 py-4 rounded-3xl text-sm font-medium">Compound Reinvestment</button>
-                        </div>
-                    </div>
-
-                    <div class="space-y-8">
-                        <div>
-                            <div class="flex justify-between mb-3 text-sm">
-                                <span class="font-medium">Trades per Day</span>
-                                <span id="trades-val" class="font-bold text-xl">2</span>
-                            </div>
-                            <input type="range" id="trades" min="1" max="5" value="2" class="w-full accent-emerald-600">
-                        </div>
-                        
-                        <div>
-                            <div class="flex justify-between mb-3 text-sm">
-                                <span class="font-medium">Profit per Trade</span>
-                                <span id="profit-val" class="font-bold text-xl text-emerald-600">1.5%</span>
-                            </div>
-                            <input type="range" id="profit" min="1" max="2.5" step="0.1" value="1.5" class="w-full accent-emerald-600">
-                        </div>
-                        
-                        <div>
-                            <div class="flex justify-between mb-3 text-sm">
-                                <span class="font-medium">Allocation %</span>
-                                <span id="alloc-val" class="font-bold text-xl">20%</span>
-                            </div>
-                            <input type="range" id="alloc" min="10" max="20" value="20" class="w-full accent-emerald-600">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Results -->
-            <div class="lg:col-span-7 space-y-6">
-                <!-- Main Result -->
-                <div class="bg-white rounded-3xl p-6 md:p-8 shadow">
-                    <div class="flex flex-col md:flex-row justify-between md:items-end gap-6">
-                        <div>
-                            <div class="text-zinc-500 text-sm">One Year Balance</div>
-                            <div id="final-balance" class="text-5xl md:text-6xl font-semibold tabular-nums text-navy">€12,920</div>
-                            <div id="daily-profit" class="text-emerald-600 text-base md:text-lg mt-2">Avg Daily Profit: €30</div>
-                        </div>
-                        <div class="text-right md:text-right">
-                            <div id="growth-pct" class="text-4xl md:text-5xl font-semibold text-emerald-600">+158.4%</div>
-                            <div id="mode-name" class="text-xs uppercase tracking-widest mt-1">Compound Reinvestment</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Period Cards -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="period-cards"></div>
-            </div>
-        </div>
+  <div class="chrome">
+    <div class="corner tl">
+      <span class="rule"></span>
+      <span>archive</span>
     </div>
-
-    <div class="bg-amber-50 border-t border-amber-200 py-10 text-center text-xs md:text-sm max-w-2xl mx-auto px-6">
-        <strong>Official Calculation</strong><br>
-        This is an official calculation issued by Standard Swiss. The responsible person for this calculation is Thomas Gallanis.
+    <div class="corner tr">
+      <div class="date-day" id="dateDay">—</div>
+      <div class="date-sub" id="dateSub">—</div>
     </div>
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      <span>rest mode</span>
+    </div>
+    <div class="counter">idle <span id="idleClock">00:00:00</span></div>
+  </div>
 
-    <script>
-        let balance = 5000;
-        let tradesPerDay = 2;
-        let profitPct = 1.5;
-        let allocPct = 20;
-        let isCompound = true;
+  <div class="floating-name" id="floatingName">
+    <div class="seal">
+      <svg viewBox="0 0 132 132">
+        <g class="seal-spin">
+          <circle class="ring-outer" cx="66" cy="66" r="64"></circle>
+          <g class="ring-tick">
+            <line x1="66" y1="4" x2="66" y2="10"></line>
+            <line x1="66" y1="122" x2="66" y2="128"></line>
+            <line x1="4" y1="66" x2="10" y2="66"></line>
+            <line x1="122" y1="66" x2="128" y2="66"></line>
+          </g>
+          <circle class="orbit-dot" cx="66" cy="4" r="1.6"></circle>
+        </g>
+        <circle class="ring-inner" cx="66" cy="66" r="52"></circle>
+        <text class="monogram" x="66" y="78" text-anchor="middle">CAJ</text>
+      </svg>
+    </div>
+    <div class="name-block">
+      <div class="name-serif">Cees A. Jacobs</div>
+      <div class="name-rule"></div>
+      <div class="name-caps">In quiet standby</div>
+    </div>
+  </div>
 
-        const presets = [
-            {val: 5000, trades: 2},
-            {val: 10000, trades: 3},
-            {val: 20000, trades: 4}
-        ];
+</div>
 
-        function formatEUR(val) {
-            return '€' + Math.round(val).toLocaleString('de-DE');
-        }
+<script>
+(function(){
 
-        function calculateForDays(days) {
-            let current = balance;
-            const totalTrades = tradesPerDay * days;
-            
-            if (isCompound) {
-                const multiplier = 1 + (allocPct/100) * (profitPct/100);
-                current = balance * Math.pow(multiplier, totalTrades);
-            } else {
-                const posSize = balance * (allocPct / 100);
-                const profitPerTrade = posSize * (profitPct / 100);
-                current = balance + (profitPerTrade * totalTrades);
-            }
-            
-            const profit = current - balance;
-            return {
-                balance: current,
-                profit: profit,
-                pct: (profit / balance) * 100
-            };
-        }
+  /* live date/time in fixed corner chrome */
+  const dateDay = document.getElementById('dateDay');
+  const dateSub = document.getElementById('dateSub');
+  const idleClock = document.getElementById('idleClock');
+  const startedAt = Date.now();
 
-        function updateAll() {
-            document.getElementById('trades-val').textContent = tradesPerDay;
-            document.getElementById('profit-val').textContent = profitPct.toFixed(1) + '%';
-            document.getElementById('alloc-val').textContent = allocPct + '%';
+  function pad(n){ return n.toString().padStart(2,'0'); }
 
-            const yearRes = calculateForDays(264);
-            document.getElementById('final-balance').textContent = formatEUR(yearRes.balance);
-            document.getElementById('growth-pct').textContent = '+' + yearRes.pct.toFixed(1) + '%';
-            
-            const avgDaily = yearRes.profit / 264;
-            document.getElementById('daily-profit').textContent = `Avg Daily Profit: ${formatEUR(avgDaily)}`;
+  function updateClocks(){
+    const now = new Date();
+    const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    dateDay.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    dateSub.textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]}`;
 
-            document.getElementById('mode-name').textContent = isCompound ? 'COMPOUND REINVESTMENT' : 'NO REINVESTMENT (LINEAR)';
+    const elapsedSec = Math.floor((Date.now() - startedAt) / 1000);
+    const h = Math.floor(elapsedSec/3600);
+    const m = Math.floor((elapsedSec%3600)/60);
+    const s = elapsedSec%60;
+    idleClock.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+  }
+  updateClocks();
+  setInterval(updateClocks, 1000);
 
-            updatePeriodCards();
-        }
+  /* ---- gentle drifting movement for burn-in protection ---- */
+  const floatingEl = document.getElementById('floatingName');
 
-        function updatePeriodCards() {
-            const container = document.getElementById('period-cards');
-            container.innerHTML = '';
-            
-            const periods = [
-                {label: '1 Day', days: 1},
-                {label: '1 Month', days: 22},
-                {label: '3 Months', days: 66},
-                {label: '1 Year', days: 264}
-            ];
-            
-            periods.forEach(p => {
-                const res = calculateForDays(p.days);
-                const card = document.createElement('div');
-                card.className = "bg-white rounded-3xl p-5 md:p-6 text-center border border-transparent hover:border-emerald-200 transition-all";
-                card.innerHTML = `
-                    <div class="text-xs text-zinc-500">${p.label}</div>
-                    <div class="text-2xl font-semibold mt-3">${formatEUR(res.balance)}</div>
-                    <div class="text-emerald-600 text-sm mt-1">+${res.pct.toFixed(1)}%</div>
-                `;
-                container.appendChild(card);
-            });
-        }
+  const settings = {
+    baseSpeed: 0.3,
+    directionChangeInterval: 110,
+    borderPadding: 90,
+    speedVariation: 0.06,
+    pauseProbability: 0.05,
+  };
 
-        function createPresetButtons() {
-            const container = document.getElementById('presets');
-            container.innerHTML = '';
-            
-            presets.forEach(p => {
-                const btn = document.createElement('button');
-                const isActive = balance === p.val;
-                btn.className = `px-7 md:px-10 py-4 md:py-5 text-xl md:text-2xl font-semibold rounded-3xl transition-all border-2 ${isActive ? 
-                    'border-emerald-600 bg-emerald-50 shadow-md' : 
-                    'border-zinc-200 hover:border-zinc-300'}`;
-                btn.textContent = formatEUR(p.val);
-                btn.onclick = () => {
-                    balance = p.val;
-                    tradesPerDay = p.trades;
-                    document.getElementById('trades').value = p.trades;
-                    createPresetButtons();
-                    updateAll();
-                };
-                container.appendChild(btn);
-            });
-        }
+  let posX = window.innerWidth / 2;
+  let posY = window.innerHeight / 2;
+  let velocityX = 0.5;
+  let velocityY = 0.4;
 
-        function setMode(compound) {
-            isCompound = compound;
-            const linearBtn = document.getElementById('btn-linear');
-            const compoundBtn = document.getElementById('btn-compound');
-            
-            if (compound) {
-                compoundBtn.classList.add('bg-emerald-600', 'text-white');
-                linearBtn.classList.remove('bg-emerald-600', 'text-white');
-            } else {
-                linearBtn.classList.add('bg-emerald-600', 'text-white');
-                compoundBtn.classList.remove('bg-emerald-600', 'text-white');
-            }
-            updateAll();
-        }
+  function normalizeSpeed(){
+    const len = Math.sqrt(velocityX*velocityX + velocityY*velocityY);
+    if(len < 0.001){
+      velocityX = settings.baseSpeed * 0.7;
+      velocityY = settings.baseSpeed * 0.5;
+      return;
+    }
+    const targetSpeed = settings.baseSpeed + (Math.random()-0.5) * settings.speedVariation;
+    velocityX = (velocityX/len) * targetSpeed;
+    velocityY = (velocityY/len) * targetSpeed;
+  }
 
-        function initListeners() {
-            document.getElementById('trades').addEventListener('input', e => {
-                tradesPerDay = parseInt(e.target.value);
-                updateAll();
-            });
-            
-            document.getElementById('profit').addEventListener('input', e => {
-                profitPct = parseFloat(e.target.value);
-                updateAll();
-            });
-            
-            document.getElementById('alloc').addEventListener('input', e => {
-                allocPct = parseInt(e.target.value);
-                updateAll();
-            });
-        }
+  function updateDirection(){
+    const currentAngle = Math.atan2(velocityY, velocityX);
+    const angleShift = (Math.random()-0.5) * 0.7;
+    let newAngle = currentAngle + angleShift;
+    const magnitude = Math.sqrt(velocityX*velocityX + velocityY*velocityY) || settings.baseSpeed;
+    velocityX = Math.cos(newAngle) * magnitude;
+    velocityY = Math.sin(newAngle) * magnitude;
+    normalizeSpeed();
+    if(Math.random() < settings.pauseProbability){
+      velocityX *= 0.2; velocityY *= 0.2;
+    }
+  }
 
-        window.onload = () => {
-            createPresetButtons();
-            initListeners();
-            setMode(true);
-        };
-    </script>
+  function getMetrics(){
+    const rect = floatingEl.getBoundingClientRect();
+    return { width: rect.width || 320, height: rect.height || 220 };
+  }
+
+  let frameCount = 0;
+
+  function loop(){
+    frameCount++;
+    if(frameCount % settings.directionChangeInterval === 0) updateDirection();
+
+    if(frameCount % 24 === 0 && Math.random() < 0.25){
+      velocityX += (Math.random()-0.5) * 0.05;
+      velocityY += (Math.random()-0.5) * 0.05;
+      normalizeSpeed();
+    }
+
+    const metrics = getMetrics();
+    const halfW = metrics.width / 2;
+    const halfH = metrics.height / 2;
+
+    const maxX = window.innerWidth - halfW - settings.borderPadding;
+    const minX = halfW + settings.borderPadding;
+    const maxY = window.innerHeight - halfH - settings.borderPadding;
+    const minY = halfH + settings.borderPadding;
+
+    posX += velocityX;
+    posY += velocityY;
+
+    let collided = false;
+    if(posX > maxX){ posX = maxX; velocityX = -Math.abs(velocityX)*(0.9+Math.random()*0.15); collided = true; }
+    else if(posX < minX){ posX = minX; velocityX = Math.abs(velocityX)*(0.9+Math.random()*0.15); collided = true; }
+    if(posY > maxY){ posY = maxY; velocityY = -Math.abs(velocityY)*(0.9+Math.random()*0.15); collided = true; }
+    else if(posY < minY){ posY = minY; velocityY = Math.abs(velocityY)*(0.9+Math.random()*0.15); collided = true; }
+
+    if(collided) normalizeSpeed();
+
+    floatingEl.style.transform = `translate(${posX-halfW}px, ${posY-halfH}px)`;
+    requestAnimationFrame(loop);
+  }
+
+  function initPosition(){
+    const metrics = getMetrics();
+    posX = window.innerWidth / 2;
+    posY = window.innerHeight / 2;
+    const angle = Math.random() * Math.PI * 2;
+    velocityX = Math.cos(angle) * settings.baseSpeed;
+    velocityY = Math.sin(angle) * settings.baseSpeed;
+    normalizeSpeed();
+    const halfW = metrics.width/2, halfH = metrics.height/2;
+    floatingEl.style.transform = `translate(${posX-halfW}px, ${posY-halfH}px)`;
+  }
+
+  window.addEventListener('resize', () => {
+    const metrics = getMetrics();
+    const halfW = metrics.width/2, halfH = metrics.height/2;
+    const maxX = window.innerWidth - halfW - settings.borderPadding;
+    const minX = halfW + settings.borderPadding;
+    const maxY = window.innerHeight - halfH - settings.borderPadding;
+    const minY = halfH + settings.borderPadding;
+    posX = Math.min(maxX, Math.max(minX, posX));
+    posY = Math.min(maxY, Math.max(minY, posY));
+    floatingEl.style.transform = `translate(${posX-halfW}px, ${posY-halfH}px)`;
+  });
+
+  initPosition();
+  requestAnimationFrame(loop);
+})();
+</script>
 </body>
 </html>
